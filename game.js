@@ -4,6 +4,32 @@ var CELL_SIZE = 50;
 var SCREEN_HEIGHT = GRID_SIZE * CELL_SIZE;
 var SCREEN_WIDTH = GRID_SIZE * CELL_SIZE;
 
+function Node(info){
+	this.info = info;
+	this.neighbours = {};
+}
+
+Node.prototype.addNeighbour(node, distance) = function{
+	this.neighbours[node.id] = {
+		node: node, 
+		distance: distance
+	};
+}
+
+function Graph(){
+	this.nodes = {};
+	this.nodeCount = 0;
+}
+
+Graph.prototype.addNode = function(node){
+	node.id = nodeCount++;
+	this.nodes[node.id] = node;
+}
+
+Graph.prototype.connect = function(node1, node2, distance){
+	node1.addNeighbour(node2, distance);
+}
+
 function GomokuAI(game){
 	this.game = game;
 }
@@ -83,9 +109,11 @@ Game.prototype.checkVictory = function(){
 			if(this.grid[i][j] == 1){
 				cont1++;
 				cont2 = 0;
+				console.log("white", i, j, cont1);
 			}else if(this.grid[i][j] == 2){
 				cont1 = 0;
 				cont2++;
+				console.log("black", i, j, cont2);
 			} else{
 				cont1 = 0;
 				cont2 = 0;
@@ -106,9 +134,11 @@ Game.prototype.checkVictory = function(){
 			if(this.grid[j][i] == 1){
 				cont1++;
 				cont2 = 0;
+				console.log("white", i, j, cont1);
 			}else if(this.grid[j][i] == 2){
 				cont1 = 0;
 				cont2++;
+				console.log("black", i, j, cont2);
 			} else{
 				cont1 = 0;
 				cont2 = 0;
@@ -134,9 +164,11 @@ Game.prototype.checkVictory = function(){
 					if(this.grid[j][i] == 1){
 						cont1++;
 						cont2 = 0;
+				console.log("white", i, j, cont1);
 					}else if(this.grid[j][i] == 2){
 						cont1 = 0;
 						cont2++;
+				console.log("black", i, j, cont2);
 					} else{
 						cont1 = 0;
 						cont2 = 0;
@@ -164,9 +196,11 @@ Game.prototype.checkVictory = function(){
 					if(this.grid[j][i] == 1){
 						cont1++;
 						cont2 = 0;
+				console.log("white", i, j, cont1);
 					}else if(this.grid[j][i] == 2){
 						cont1 = 0;
 						cont2++;
+				console.log("black", i, j, cont2);
 					} else{
 						cont1 = 0;
 						cont2 = 0;
