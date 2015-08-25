@@ -9,12 +9,12 @@ function GomokuAI(game){
 }
 
 GomokuAI.prototype.play = function(){
-	var grid_x = Math.floor(Math.random() * GRID_SIZE);
-	var grid_y = Math.floor(Math.random() * GRID_SIZE);
+	var grid_x = Math.floor(Math.random() * (GRID_SIZE-1));
+	var grid_y = Math.floor(Math.random() * (GRID_SIZE-1));
 	
 	while(this.game.grid[grid_y][grid_x] != 0){
-		var grid_x = Math.floor(Math.random() * GRID_SIZE);
-		var grid_y = Math.floor(Math.random() * GRID_SIZE);		
+		var grid_x = Math.floor(Math.random() * (GRID_SIZE-1));
+		var grid_y = Math.floor(Math.random() * (GRID_SIZE-1));		
 	}
 
 	this.game.play(grid_x, grid_y);
@@ -51,10 +51,10 @@ Game.prototype.buildGrid = function(){
 }
 
 Game.prototype.click = function(x, y){
-	if(x < 0 || x > SCREEN_WIDTH || y < 0 || y > SCREEN_HEIGHT || this.gameover || this.turn == "black") return;
+	if(x < 0 || x > SCREEN_WIDTH - CELL_SIZE || y < 0 || y > SCREEN_HEIGHT - CELL_SIZE || this.gameover || this.turn == "black") return;
 
-	var grid_x = Math.floor(x / CELL_SIZE);
-	var grid_y = Math.floor(y / CELL_SIZE);
+	var grid_x = Math.floor((x - CELL_SIZE/2) / CELL_SIZE);
+	var grid_y = Math.floor((y - CELL_SIZE/2) / CELL_SIZE);
 
 	this.play(grid_x, grid_y);
 }
@@ -220,10 +220,10 @@ Renderer.prototype.render = function(){
 		for(var j = 0; j < grid[i].length; j++){
 			if(grid[i][j] == 1){
 				this.ctx.fillStyle = "white";
-				this.fillOval(j*CELL_SIZE+1, i*CELL_SIZE+1, CELL_SIZE-2);
+				this.fillOval(j*CELL_SIZE+1 + CELL_SIZE/2, i*CELL_SIZE+1 + CELL_SIZE/2, CELL_SIZE-2);
 			}else if(grid[i][j] == 2){
 				this.ctx.fillStyle = "black";
-				this.fillOval(j*CELL_SIZE+1, i*CELL_SIZE+1, CELL_SIZE-2);
+				this.fillOval(j*CELL_SIZE+1 + CELL_SIZE/2, i*CELL_SIZE+1 + CELL_SIZE/2, CELL_SIZE-2);
 			}
 		}
 	}
