@@ -50,7 +50,26 @@ GomokuAI.prototype.heuristic = function(){
 
 }
 
-GomokuAI.prototype.utility = function(){
+GomokuAI.prototype.utility = function(grid_state){
+	/*
+	 *
+	 * This should determine how close to victory the AI is
+	 *
+	 * Points to note:
+	 *
+	 * -Amount of possible sequences, including sequential and sparse stones
+	 * -Amount of rounds played
+	 * 
+	 * It is important also that the AI thinks not only in winning
+	 * but in not losing
+	 * e.g. try to break the oponent's sequence after getting close to the objective sequence
+	 * 
+	 * Also, it is important that the AI tries not to play next to the border of the board
+	 * to make more difficult for the opponent to make a counter play and to give more
+	 * possibilities to make asequence
+	 *
+	 */
+	
 
 }
 
