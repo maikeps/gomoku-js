@@ -27,11 +27,12 @@ Graph.prototype.addNode = function(node){
 }
 
 Graph.prototype.connect = function(node1, node2, distance){
-	node1.addNeighbour(node2, distance);
+	node1.addNeighbour(node2, distance || 1);
 }
 
-function GomokuAI(game){
+function GomokuAI(game, player_number){
 	this.game = game;
+	this.player_number = player_number;
 }
 
 GomokuAI.prototype.play = function(){
@@ -73,6 +74,27 @@ GomokuAI.prototype.utility = function(grid_state){
 
 }
 
+GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state){
+	var graph = new Graph();
+	var root = new Node(grid_state);
+	graph.addNode(root);
+
+	var grid_aux = grid_state;
+	for(var i = 0; i < grid_state.length; i++){
+		for(var j = 0; j < grid_state[i].length; j++){
+			if(grid_state[i][j] == 0){
+				grid_aux[i][j] = player_number;
+				var node = new Node(grid_aux);
+				graph.addNode(node);
+				graph.connect(root, node);
+			}
+			grid_aux = grid_state;
+		}
+	}
+
+	return graph;
+}
+
 function Game(grid_size, sequence_size){
 	this.grid_size = grid_size;
 	this.grid = this.buildGrid();
@@ -81,6 +103,18 @@ function Game(grid_size, sequence_size){
 	this.ai = new GomokuAI(this);
 
 	this.gameover = false;
+}
+
+Game.prototype.debug = function(){
+	var debug = ""
+	for(var i = 0; i < this.grid[0].length; i++){
+		var line = "";
+		for(var j = 0; j < this.grid.length; j++){
+			line += this.grid[i][j] + " "
+		}
+		debug += line + "\n"
+	}
+	console.log(debug)
 }
 
 Game.prototype.buildGrid = function(){
