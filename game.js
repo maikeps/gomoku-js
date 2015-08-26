@@ -9,7 +9,7 @@ function Node(info){
 	this.neighbours = {};
 }
 
-Node.prototype.addNeighbour(node, distance) = function{
+Node.prototype.addNeighbour = function(node, distance){
 	this.neighbours[node.id] = {
 		node: node, 
 		distance: distance
