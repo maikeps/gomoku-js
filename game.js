@@ -1,8 +1,10 @@
 var GRID_SIZE = 15;
 var SEQUENCE_SIZE = 5;
 var CELL_SIZE = 50;
-var SCREEN_HEIGHT = GRID_SIZE * CELL_SIZE;
-var SCREEN_WIDTH = GRID_SIZE * CELL_SIZE;
+var BOARD_HEIGHT = GRID_SIZE * CELL_SIZE;
+var BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
+var SCREEN_HEIGHT = BOARD_HEIGHT + CELL_SIZE
+var SCREEN_WIDTH = BOARD_WIDTH + CELL_SIZE
 
 function Node(info){
 	this.info = info;
@@ -100,7 +102,7 @@ function Game(grid_size, sequence_size){
 	this.grid = this.buildGrid();
 	this.turn = "white";
 	this.sequence_size = sequence_size;
-	this.ai = new GomokuAI(this);
+	this.ai = new GomokuAI(this, 2);
 
 	this.gameover = false;
 }
@@ -130,7 +132,7 @@ Game.prototype.buildGrid = function(){
 }
 
 Game.prototype.click = function(x, y){
-	if(x < 0 || x > SCREEN_WIDTH - CELL_SIZE || y < 0 || y > SCREEN_HEIGHT - CELL_SIZE || this.gameover || this.turn == "black") return;
+	if(x < 0 || x > BOARD_WIDTH || y < 0 || y > BOARD_HEIGHT || this.gameover || this.turn == "black") return;
 
 	var grid_x = Math.floor((x - CELL_SIZE/2) / CELL_SIZE);
 	var grid_y = Math.floor((y - CELL_SIZE/2) / CELL_SIZE);
@@ -279,8 +281,8 @@ function Renderer(game){
 	this.game = game;
 	this.canvas = document.getElementById("canvas");
 	this.ctx = canvas.getContext("2d");
-	canvas.width = SCREEN_WIDTH;
-	canvas.height = SCREEN_HEIGHT;
+	canvas.width = BOARD_WIDTH + CELL_SIZE + BOARD_WIDTH /4;
+	canvas.height = BOARD_HEIGHT + CELL_SIZE;
 }
 
 //canvas.offsetTop
@@ -296,10 +298,10 @@ Renderer.prototype.render = function(){
 	var offsety = CELL_SIZE;
 	
 	for(var i = 1; i < GRID_SIZE + 1; i++){
-		this.drawLine(i*CELL_SIZE, offsety, i*CELL_SIZE, SCREEN_HEIGHT-offsety, "black", 1);
+		this.drawLine(i*CELL_SIZE, offsety, i*CELL_SIZE, BOARD_HEIGHT, "black", 1);
 	}
 	for(var i = 1; i < GRID_SIZE + 1; i++){
-		this.drawLine(offsetx, i*CELL_SIZE, SCREEN_WIDTH-offsety, i*CELL_SIZE, "black", 1);
+		this.drawLine(offsetx, i*CELL_SIZE, BOARD_WIDTH, i*CELL_SIZE, "black", 1);
 	}
 
 
