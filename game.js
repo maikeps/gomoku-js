@@ -1,5 +1,5 @@
-var GRID_SIZE = 3;
-var SEQUENCE_SIZE = 3;
+var GRID_SIZE = 15;
+var SEQUENCE_SIZE = 5;
 var CELL_SIZE = 50;
 var BOARD_HEIGHT = GRID_SIZE * CELL_SIZE;
 var BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
@@ -106,12 +106,8 @@ GomokuAI.prototype.utility = function(grid_state){
 					break;
 				}
 			}
-			// if(grid_state[i][j] == this.player_number){
-			// 	count_seq++;
-			// }else{
 			count += count_seq;
 			count_seq = 0;
-			// }
 		}
 	}
 
@@ -151,11 +147,6 @@ function GomokuPlayer(player_number, color){
 }
 
 GomokuPlayer.prototype.play = function(grid_x, grid_y){
-	// if(x < 0 || x > BOARD_WIDTH || y < 0 || y > BOARD_HEIGHT || this.gameover || this.turn == "black") return;
-
-	// var grid_x = Math.floor((x - CELL_SIZE/2) / CELL_SIZE);
-	// var grid_y = Math.floor((y - CELL_SIZE/2) / CELL_SIZE);
-
 	this.game.play(grid_x, grid_y);
 }
 
@@ -227,21 +218,6 @@ Game.prototype.play = function(grid_x, grid_y){
 	}
 }
 
-
-Game.prototype.play2 = function(grid_x, grid_y){
-	if(this.grid[grid_y][grid_x] == 0){
-		if(this.turn == "white"){
-			this.grid[grid_y][grid_x] = 1;
-			this.turn = "black";
-		} else{
-			this.grid[grid_y][grid_x] = 2;
-			this.turn = "white";
-		}
-
-		this.gameover = (this.checkVictory() != undefined);
-	}
-}
-
 Game.prototype.checkVictory = function(){
 	var cont1 = 0;
 	var cont2 = 0;
@@ -293,62 +269,111 @@ Game.prototype.checkVictory = function(){
 	}
 	
 	// "\"
-	var offset = -(((this.grid_size-2*(this.sequence_size - 1))-1)/2);
-	var offsetMax = -1*offset;
-	
-	for(var k = offset; k <=offsetMax; k++){	
-		for(var i = 0; i < this.grid_size; i++){
-			for(var j = 0; j < this.grid_size; j++){
-				if(i-j == k){
-					if(this.grid[j][i] == 1){
-						cont1++;
-						cont2 = 0;
-					}else if(this.grid[j][i] == 2){
-						cont1 = 0;
-						cont2++;
-					} else{
-						cont1 = 0;
-						cont2 = 0;
-					}
-					if(cont1 == this.sequence_size){
-						return "white";
-					} else if(cont2 == this.sequence_size){
-						return "black";
-					}
+	for(var i = 0; i < this.grid_size; i++){
+		for(var j = 0; j < this.grid_size; j++){
+			//Down Right
+			for(var k = 0; k < this.sequence_size; k++){
+				var next = this.getCell(j+k, i+k);
+				if(next == -1 || next == 0){
+					cont1 = 0;
+					cont2 = 0;
+				}else if(next == 1){
+					cont1++;
+					cont2 = 0;
+				}else{
+					cont2++;
+					cont1 = 0;
 				}
 			}
-		}
-		cont1 = 0;
-		cont2 = 0;
-	}
-	
-	//"/"
+			if(cont1 == this.sequence_size){
+				return "white";
+			} else if(cont2 == this.sequence_size){
+				return "black";
+			}
 
-	var sum = (this.sequence_size-1);
-	var sumMax = this.grid_size-1 + this.grid_size-1 - sum;
-	for(var k = sum; k <=sumMax; k++){	
-		for(var i = 0; i < this.grid_size; i++){
-			for(var j = 0; j < this.grid_size; j++){
-				if(i+j == k){
-					if(this.grid[j][i] == 1){
-						cont1++;
-						cont2 = 0;
-					}else if(this.grid[j][i] == 2){
-						cont1 = 0;
-						cont2++;
-					} else{
-						cont1 = 0;
-						cont2 = 0;
-					}
-					if(cont1 == this.sequence_size){
-						return "white";
-					} else if(cont2 == this.sequence_size){
-						return "black";
-					}
+			cont1 = 0;
+			cont2 = 0;
+
+			//Up Left
+			for(var k = 0; k < this.sequence_size; k++){
+				var next = this.getCell(j-k, i-k);
+				if(next == -1 || next == 0){
+					cont1 = 0;
+					cont2 = 0;
+				}else if(next == 1){
+					cont1++;
+					cont2 = 0;
+				}else{
+					cont2++;
+					cont1 = 0;
 				}
 			}
+			if(cont1 == this.sequence_size){
+				return "white";
+			} else if(cont2 == this.sequence_size){
+				return "black";
+			}
+
+			cont1 = 0;
+			cont2 = 0;
 		}
 	}
+
+	// "/"
+	for(var i = 0; i < this.grid_size; i++){
+		for(var j = 0; j < this.grid_size; j++){
+			//Down Left
+			for(var k = 0; k < this.sequence_size; k++){
+				var next = this.getCell(j-k, i+k);
+				if(next == -1 || next == 0){
+					cont1 = 0;
+					cont2 = 0;
+				}else if(next == 1){
+					cont1++;
+					cont2 = 0;
+				}else{
+					cont2++;
+					cont1 = 0;
+				}
+			}
+			if(cont1 == this.sequence_size){
+				return "white";
+			} else if(cont2 == this.sequence_size){
+				return "black";
+			}
+
+			cont1 = 0;
+			cont2 = 0;
+
+			//Up Right
+			for(var k = 0; k < this.sequence_size; k++){
+				var next = this.getCell(j+k, i-k);
+				if(next == -1 || next == 0){
+					cont1 = 0;
+					cont2 = 0;
+				}else if(next == 1){
+					cont1++;
+					cont2 = 0;
+				}else{
+					cont2++;
+					cont1 = 0;
+				}
+			}
+			if(cont1 == this.sequence_size){
+				return "white";
+			} else if(cont2 == this.sequence_size){
+				return "black";
+			}
+
+			cont1 = 0;
+			cont2 = 0;
+		}
+	}
+}
+
+Game.prototype.getCell = function(x, y){
+	if(x < 0 || y < 0 || x > this.grid_size-1 || y > this.grid_size-1) return -1;
+	return this.grid[y][x];
 }
 
 Game.prototype.update = function(){
@@ -370,10 +395,6 @@ function Renderer(game){
 	canvas.height = BOARD_HEIGHT + CELL_SIZE;
 }
 
-//canvas.offsetTop
-//canvas.offsetLeft
-//event.pageX
-//event.pageY
 Renderer.prototype.render = function(){
 	this.ctx.fillStyle = "#77BD77";
 	this.ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
