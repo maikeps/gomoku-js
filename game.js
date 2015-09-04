@@ -114,14 +114,12 @@ GomokuAI.prototype.utility = function(grid_state){
 	return count-countOponent;
 }
 
-GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state){
-	var grid_state_copy = this.copyGrid(grid_state);
-	
+GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state){	
 	var graph = new Graph();
-	var root = new Node(grid_state_copy);
+	var root = new Node(this.copyGrid(grid_state));
 	graph.addNode(root);
 
-	var grid_aux = grid_state_copy;
+	var grid_aux = this.copyGrid(grid_state);
 	for(var i = 0; i < grid_state.length; i++){
 		for(var j = 0; j < grid_state[i].length; j++){
 			if(grid_state[i][j] == 0){
