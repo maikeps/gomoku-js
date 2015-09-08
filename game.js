@@ -6,6 +6,34 @@ var BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
 var SCREEN_HEIGHT = BOARD_HEIGHT + CELL_SIZE
 var SCREEN_WIDTH = BOARD_WIDTH + CELL_SIZE
 
+
+/*
+ * CLASS SEQUENCE
+ */
+function Sequence(pieces, obstacles){
+	this.pieces = pieces;
+	this.obstacles = obstacles;
+	this.direction = findDirection(); //ENUM
+	this.size = getSize();
+	this.weight = getWeight();
+}
+
+Sequence.prototype.findDirection = function(){
+	
+}
+
+Sequence.prototype.getSize = function(){
+	
+}
+
+Sequence.prototype.getWeight = function(){
+	
+}
+
+/*
+ * CLASS NODE
+ */
+
 function Node(info){
 	this.info = info;
 	this.weight = 0;
@@ -19,6 +47,10 @@ Node.prototype.addNeighbour = function(node, distance){
 	};
 }
 
+
+/*
+ * CLASS GRAPH
+ */
 function Graph(){
 	this.nodes = {};
 	this.nodeCount = 0;
@@ -33,6 +65,10 @@ Graph.prototype.connect = function(node1, node2, distance){
 	node1.addNeighbour(node2, distance || 1);
 }
 
+
+/*
+ * CLASS GomokuAI
+ */
 function GomokuAI(player_number, color){
 	this.player_number = player_number;
 	this.color = color;
@@ -91,27 +127,70 @@ GomokuAI.prototype.utility = function(grid_state){
 	 *
 	 */
 	
-	var count = 0;
-	var countOponent = 0;
+	var playerSeq = this.findSequences(grid_state, this.player_number);
+	var playerValue = this.evaluateSequences(playerSeq);
 
-	var count_seq = 0;
+	var oponentSeq = this.findSequences(grid_state, (this.player_number % 2) + 1);
+	var oponentValue = this.evaluateSequences(oponentValue);
+
+	return playerValue - oponentValue;
+
+	//TODO
+
+	// var count = 0;
+	// var countOponent = 0;
+
+	// var count_seq = 0;
+	// for(var i = 0; i < grid_state.length; i++){
+	// 	for(var j = 0; j < grid_state[i].length-(SEQUENCE_SIZE-1); j++){
+	// 		for(var k = j; k < SEQUENCE_SIZE; k++){
+	// 			if(grid_state[i][k] == this.player_number){
+	// 				count_seq++;
+	// 				console.log(i, k, count_seq);
+	// 			}else if(grid_state[i][k] != 0){
+	// 				count_seq = 0;
+	// 				break;
+	// 			}
+	// 		}
+	// 		count += count_seq;
+	// 		count_seq = 0;
+	// 	}
+	// }
+
+	// return count-countOponent;
+}
+
+GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_number){
+	var sequences = {};
+
+	// -
 	for(var i = 0; i < grid_state.length; i++){
-		for(var j = 0; j < grid_state[i].length-(SEQUENCE_SIZE-1); j++){
-			for(var k = j; k < SEQUENCE_SIZE; k++){
-				if(grid_state[i][k] == this.player_number){
-					count_seq++;
-					console.log(i, k, count_seq);
-				}else if(grid_state[i][k] != 0){
-					count_seq = 0;
-					break;
+		for(var j = 0; j < grid_state[i].length; j++){
+			if(grid_state[i][j] == player_number){
+				var sequence = [(i,j)];
+				var obstacles = [];
+
+				if(this.game.getCell(j-1, i) == oponent_number){
+					obstacles.push((i, j-1))
+				}
+				for(var k = 1; k < SEQUENCE_SIZE; k++){
+					var next = this.game.getCell(j+k, i);//FIXME?
+
+					if(next == player_number){
+						sequence.push((i, j+k));
+					}else if(next == oponent_number && obstacles.length == 1){
+						break;
+					}else if(next == -1){
+
+					}
+					if(k == SEQUENCE_SIZE-1 && this.game.getCell(j+k+1, i) == oponent_number){
+						sequences.push(sequence)
+						obstacles.push(i, j+k+1);
+					}
 				}
 			}
-			count += count_seq;
-			count_seq = 0;
 		}
 	}
-
-	return count-countOponent;
 }
 
 GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state){	
@@ -139,6 +218,10 @@ GomokuAI.prototype.setGame = function(game){
 	this.game = game;
 }
 
+
+/*
+ * CLASS GomokuPlayer
+ */
 function GomokuPlayer(player_number, color){
 	this.player_number = player_number;
 	this.color = color;
@@ -152,6 +235,11 @@ GomokuPlayer.prototype.setGame = function(game){
 	this.game = game;
 }
 
+
+
+/*
+ * CLASS Game
+ */
 function Game(grid_size, sequence_size, player1, player2){
 	this.grid_size = grid_size;
 	this.grid = this.buildGrid();
@@ -213,6 +301,19 @@ Game.prototype.play = function(grid_x, grid_y){
 		}
 
 		this.gameover = (this.checkVictory() != undefined);
+
+		this.updateSequences(grid_y, grid_x);
+	}
+}
+
+Game.prototype.updateSequences = function(i, j){
+	var sequence = [(i,j)];
+
+	
+	
+	for(var i = 0; i < this.sequences; i++){
+		var sequence_cmp = this.sequences[i];
+
 	}
 }
 
@@ -385,6 +486,10 @@ Game.prototype.setPlayers = function(player1, player2){
 	this.player2 = player2;
 }
 
+
+/*
+ * CLASS Renderer
+ */
 function Renderer(game){
 	this.game = game;
 	this.canvas = document.getElementById("canvas");
