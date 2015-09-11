@@ -17,6 +17,7 @@ function Node(info){
 	this.info = info;
 	this.weight = 0;
 	this.neighbours = {};
+	this.sorted_neighbours = [];
 	this.x = -1;
 	this.y = -1;
 }
@@ -35,6 +36,19 @@ Node.prototype.addNeighbour = function(node, distance){
 		node: node, 
 		distance: distance
 	};
+}
+
+Node.prototype.sort_neighbours = function(){
+	var sorted = [];
+	for(var key in this.neighbours){
+		var node = this.neighbours[key].node;
+		sorted.push([node, node.weight]);
+	}
+	sorted.sort(function(a, b){
+		return a[1] - b[1];
+	});
+
+	this.sorted_neighbours = sorted;
 }
 
 
@@ -75,7 +89,10 @@ function GomokuAI(player_number, color){
 }
 
 GomokuAI.prototype.play = function(){
-	var choice = this.minMax(game.grid, AI_DEPTH, true);
+	var alpha = -INFINITY;
+	var beta = INFINITY;
+	var choice = this.pruningMiniMax(game.grid, AI_DEPTH, AI_DEPTH, true, alpha, beta);
+	// var choice = this.minMax(game.grid, AI_DEPTH, true);
 
 	var x = choice[1];
 	var y = choice[2];
@@ -91,8 +108,59 @@ GomokuAI.prototype.copyGrid = function(grid){
 	return copy;
 }
 
-GomokuAI.prototype.minMax = function(grid_state, depth, max){
+GomokuAI.prototype.pruningMiniMax = function(grid_state, initial_depth, depth, max, alpha, beta){
+	var graph = this.buildPossibilitiesGraph(grid_state, max, this.game.rounds_played + initial_depth-depth);
+	var current_state = graph.nodes[0];
+	var x = Math.floor(GRID_SIZE/2);
+	var y = Math.floor(GRID_SIZE/2);
 
+	if(depth == 0 || this.game.checkVictory(grid_state) != undefined){
+		var value = this.utility(grid_state, this.game.rounds_played + initial_depth);
+		x = current_state.x;
+		y = current_state.y;
+		return [value];
+	}
+		
+	current_state.sort_neighbours();
+
+	if(max){
+		for(var i = 0; i < current_state.sorted_neighbours.length; i++){
+			var node = current_state.sorted_neighbours[i][0];
+		// for(var key in current_state.neighbours){
+		// 	var node = current_state.neighbours[key].node;
+			var value = this.pruningMiniMax(node.info, initial_depth, depth-1, false, alpha, beta)[0];
+			if(value > alpha){
+				alpha = value;
+			 	x = node.x;
+			 	y = node.y;
+			}
+			if(alpha >= beta){
+				return [alpha, node.x, node.y];
+			}
+		}
+		return [alpha, x, y];
+	}else{
+		for(var i = 0; i < current_state.sorted_neighbours.length; i++){
+			var node = current_state.sorted_neighbours[i][0];
+
+		// for(var key in current_state.neighbours){
+		// 	var node = current_state.neighbours[key].node;
+			var value = this.pruningMiniMax(node.info, initial_depth, depth-1, true, alpha, beta)[0];
+
+			if(value < beta){
+				beta = value;
+			 	x = node.x;
+			 	y = node.y;
+			}
+			if(alpha <= beta){
+				return [beta, node.x, node.y];
+			}
+		}
+		return [beta, x, y];
+	}
+}
+
+GomokuAI.prototype.minMax = function(grid_state, depth, max){
 	var graph = this.buildPossibilitiesGraph(grid_state, max);
 	var current_state = graph.nodes[0];
 	var x = Math.floor(GRID_SIZE/2);
@@ -104,12 +172,14 @@ GomokuAI.prototype.minMax = function(grid_state, depth, max){
 		y = current_state.y;
 		return [value];
 	}
-		
+	
 
 	if(max){
 		var max_value = -INFINITY;
+		// for(var i = 0; i < current_state.sorted_neighbours.length; i++){
 		for(var key in current_state.neighbours){
 			var node = current_state.neighbours[key].node;
+			// var node = current_state.sorted_neighbours[i];
 			var value = this.minMax(node.info, depth-1, false)[0];
 
 			if(value > max_value){
@@ -121,6 +191,7 @@ GomokuAI.prototype.minMax = function(grid_state, depth, max){
 		return [max_value, x, y];
 	}else{
 		var min_value = INFINITY;
+
 		for(var key in current_state.neighbours){
 			var node = current_state.neighbours[key].node;
 			var value = this.minMax(node.info, depth-1, true)[0];
@@ -135,7 +206,7 @@ GomokuAI.prototype.minMax = function(grid_state, depth, max){
 	}
 }
 
-GomokuAI.prototype.utility = function(grid_state){
+GomokuAI.prototype.utility = function(grid_state, rounds_played){
 	/*
 	 *
 	 * This should determine how close to victory the AI is
@@ -156,10 +227,10 @@ GomokuAI.prototype.utility = function(grid_state){
 	 */
 	
 	var playerSeq = this.findSequences(grid_state, this.player_number);
-	var playerValue = this.evaluateSequences(playerSeq);
+	var playerValue = this.evaluateSequences(playerSeq, rounds_played);
 
 	var oponentSeq = this.findSequences(grid_state, (this.player_number % 2) + 1);
-	var oponentValue = this.evaluateSequences(oponentSeq);
+	var oponentValue = this.evaluateSequences(oponentSeq, rounds_played);
 
 	return playerValue - oponentValue;
 }
@@ -261,24 +332,26 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 }
 
 //TODO otimizar
-GomokuAI.prototype.evaluateSequences = function(sequences){
+GomokuAI.prototype.evaluateSequences = function(sequences, rounds_played){
 	var sum = 0;
 	for(var i = 0; i < sequences.length; i++){
 		var sequence = sequences[i];
 		var value = 0;
 		
 		if(sequence.length != 1){
-			value = Math.pow(3, sequence.length*2);
+			value = Math.pow(3, sequence.length*2) / (rounds_played+1);
+			// console.log(sequence.length*2, rounds_played+1, value);
 		} else{
 			value += 0.1;
 		}
+
 		sum += value;
 	}
 	return sum;
 }
 
 //TODO otimizar
-GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max){	
+GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max, rounds_played){	
 	var graph = new Graph();
 	var root = new Node(this.copyGrid(grid_state));
 	graph.addNode(root);
@@ -301,6 +374,7 @@ GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max){
 								}
 								var node = new Node(grid_aux);
 								node.setPos(j+l, i+k);
+								node.setWeight(this.utility(node.info, rounds_played));
 								graph.addNode(node);
 								graph.connect(root, node);
 
@@ -314,6 +388,7 @@ GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max){
 			}
 		}
 	}
+
 	return graph;
 }
 
@@ -354,6 +429,7 @@ function Game(grid_size, sequence_size, player1, player2){
 
 	this.currentPlayer = player1;
 
+	this.rounds_played = 0;
 	this.gameover = false;
 }
 
@@ -397,7 +473,7 @@ Game.prototype.play = function(grid_x, grid_y){
 		}else{
 			this.currentPlayer = this.player1;
 		}
-
+		this.rounds_played += 1;
 		this.gameover = (this.checkVictory(this.grid) != undefined);
 	}
 }
@@ -638,7 +714,7 @@ var ai1 = new GomokuAI(1, "white");
 var ai2 = new GomokuAI(2, "black");
 var player1 = new GomokuPlayer(1, "white");
 var player2 = new GomokuPlayer(2, "black");
-var game = new Game(GRID_SIZE, SEQUENCE_SIZE, ai1, ai2);
+var game = new Game(GRID_SIZE, SEQUENCE_SIZE, player1, ai2);
 
 this.ai1.setGame(game);
 this.ai2.setGame(game);
