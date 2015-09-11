@@ -6,6 +6,7 @@ var BOARD_WIDTH = GRID_SIZE * CELL_SIZE;
 var SCREEN_HEIGHT = BOARD_HEIGHT + CELL_SIZE;
 var SCREEN_WIDTH = BOARD_WIDTH + CELL_SIZE;
 var INFINITY = 4294967295;
+var AI_DEPTH = 4;
 
 
 /*
@@ -74,7 +75,7 @@ function GomokuAI(player_number, color){
 }
 
 GomokuAI.prototype.play = function(){
-	var choice = this.minMax(game.grid, 1, true);
+	var choice = this.minMax(game.grid, AI_DEPTH, true);
 
 	var x = choice[1];
 	var y = choice[2];
@@ -86,11 +87,6 @@ GomokuAI.prototype.copyGrid = function(grid){
 	var copy = [];
 	for(var i = 0; i < grid.length; i++){
 		copy.push(grid[i].slice());
-		// var line = [];
-		// for(var j = 0; j < grid[i].length; j++){
-		// 	line.push(grid[i][j]);
-		// }
-		// copy.push(line);
 	}
 	return copy;
 }
@@ -98,14 +94,18 @@ GomokuAI.prototype.copyGrid = function(grid){
 GomokuAI.prototype.minMax = function(grid_state, depth, max){
 
 	var graph = this.buildPossibilitiesGraph(grid_state, max);
-	if(depth == 0){
-		var value = this.utility(grid_state);
-		return [value];
-	}
 	var current_state = graph.nodes[0];
-
 	var x = Math.floor(GRID_SIZE/2);
 	var y = Math.floor(GRID_SIZE/2);
+
+	if(depth == 0 || this.game.checkVictory(grid_state) != undefined){
+		var value = this.utility(grid_state);
+		x = current_state.x;
+		y = current_state.y;
+		return [value];
+	}
+		
+
 	if(max){
 		var max_value = -INFINITY;
 		for(var key in current_state.neighbours){
@@ -191,7 +191,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 			if(grid_state[i][j] == player_number){
 				var sequence = [[i, j]];
 				for(var k = 1; k <= SEQUENCE_SIZE; k++){
-					var next = this.game.getCell(j+k, i);
+					var next = this.game.getCell(grid_state, j+k, i);
 					if(next != player_number){
 						j = j+k;
 						break;
@@ -215,7 +215,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 				var sequence = [[i, j]];
 				visited_col[i][j] = 1;
 				for(var k = 1; k <= SEQUENCE_SIZE; k++){
-					var next = this.game.getCell(j, i+k);
+					var next = this.game.getCell(grid_state, j, i+k);
 					if(next != player_number){
 						break;
 					}
@@ -230,7 +230,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 				var sequence = [[i, j]];
 				visited_diag1[i][j] = 1;
 				for(var k = 1; k <= SEQUENCE_SIZE; k++){
-					var next = this.game.getCell(j-k, i+k);
+					var next = this.game.getCell(grid_state, j-k, i+k);
 					if(next != player_number){
 						break;
 					}
@@ -245,7 +245,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 				var sequence = [[i, j]];
 				visited_diag2[i][j] = 1;
 				for(var k = 1; k <= SEQUENCE_SIZE; k++){
-					var next = this.game.getCell(j+k, i+k);
+					var next = this.game.getCell(grid_state, j+k, i+k);
 					if(next != player_number){
 						break;
 					}
@@ -398,21 +398,21 @@ Game.prototype.play = function(grid_x, grid_y){
 			this.currentPlayer = this.player1;
 		}
 
-		this.gameover = (this.checkVictory() != undefined);
+		this.gameover = (this.checkVictory(this.grid) != undefined);
 	}
 }
 
-Game.prototype.checkVictory = function(){
+Game.prototype.checkVictory = function(grid){
 	var cont1 = 0;
 	var cont2 = 0;
 	
 	//line
-	for(var i = 0; i < this.grid_size; i++){
-		for(var j = 0; j < this.grid_size; j++){
-			if(this.grid[i][j] == 1){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
+			if(grid[i][j] == 1){
 				cont1++;
 				cont2 = 0;
-			}else if(this.grid[i][j] == 2){
+			}else if(grid[i][j] == 2){
 				cont1 = 0;
 				cont2++;
 			} else{
@@ -430,12 +430,12 @@ Game.prototype.checkVictory = function(){
 	}
 	
 	//column
-	for(var i = 0; i < this.grid_size; i++){
-		for(var j = 0; j < this.grid_size; j++){
-			if(this.grid[j][i] == 1){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
+			if(grid[j][i] == 1){
 				cont1++;
 				cont2 = 0;
-			}else if(this.grid[j][i] == 2){
+			}else if(grid[j][i] == 2){
 				cont1 = 0;
 				cont2++;
 			} else{
@@ -453,11 +453,11 @@ Game.prototype.checkVictory = function(){
 	}
 	
 	// "\"
-	for(var i = 0; i < this.grid_size; i++){
-		for(var j = 0; j < this.grid_size; j++){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
 			//Down Right
 			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(j+k, i+k);
+				var next = this.getCell(grid, j+k, i+k);
 				if(next == -1 || next == 0){
 					cont1 = 0;
 					cont2 = 0;
@@ -480,7 +480,7 @@ Game.prototype.checkVictory = function(){
 
 			//Up Left
 			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(j-k, i-k);
+				var next = this.getCell(grid, j-k, i-k);
 				if(next == -1 || next == 0){
 					cont1 = 0;
 					cont2 = 0;
@@ -504,11 +504,11 @@ Game.prototype.checkVictory = function(){
 	}
 
 	// "/"
-	for(var i = 0; i < this.grid_size; i++){
-		for(var j = 0; j < this.grid_size; j++){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
 			//Down Left
 			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(j-k, i+k);
+				var next = this.getCell(grid, j-k, i+k);
 				if(next == -1 || next == 0){
 					cont1 = 0;
 					cont2 = 0;
@@ -531,7 +531,7 @@ Game.prototype.checkVictory = function(){
 
 			//Up Right
 			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(j+k, i-k);
+				var next = this.getCell(grid, j+k, i-k);
 				if(next == -1 || next == 0){
 					cont1 = 0;
 					cont2 = 0;
@@ -555,9 +555,9 @@ Game.prototype.checkVictory = function(){
 	}
 }
 
-Game.prototype.getCell = function(x, y){
-	if(x < 0 || y < 0 || x > this.grid_size-1 || y > this.grid_size-1) return -1;
-	return this.grid[y][x];
+Game.prototype.getCell = function(grid, x, y){
+	if(x < 0 || y < 0 || x > GRID_SIZE-1 || y > GRID_SIZE-1) return -1;
+	return grid[y][x];
 }
 
 Game.prototype.update = function(){
@@ -638,7 +638,7 @@ var ai1 = new GomokuAI(1, "white");
 var ai2 = new GomokuAI(2, "black");
 var player1 = new GomokuPlayer(1, "white");
 var player2 = new GomokuPlayer(2, "black");
-var game = new Game(GRID_SIZE, SEQUENCE_SIZE, ai1, player2);
+var game = new Game(GRID_SIZE, SEQUENCE_SIZE, ai1, ai2);
 
 this.ai1.setGame(game);
 this.ai2.setGame(game);
@@ -658,6 +658,6 @@ setInterval(function(){
 	game.update();
 	renderer.render();
 	if(game.gameover){
-		console.log(game.checkVictory());
+		console.log(game.checkVictory(game.grid));
 	}
 }, 100);
