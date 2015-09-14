@@ -86,6 +86,8 @@ Graph.prototype.getNodeByWeight = function(weight){
 function GomokuAI(player_number, color){
 	this.player_number = player_number;
 	this.color = color;
+
+	this.possibilities = {};
 }
 
 GomokuAI.prototype.play = function(){
@@ -109,18 +111,25 @@ GomokuAI.prototype.copyGrid = function(grid){
 }
 
 GomokuAI.prototype.pruningMiniMax = function(grid_state, initial_depth, depth, max, alpha, beta){
+
+	if(depth == 0 || this.game.checkVictory(grid_state) != undefined){
+		var value = 0;
+
+		if(this.possibilities[grid_state] !== undefined){
+			value = this.possibilities[grid_state];
+		}else{
+			value = this.utility(grid_state, this.game.rounds_played + initial_depth);
+			this.possibilities[grid_state] = value;
+		}
+
+		return [value];
+	}
+		
 	var graph = this.buildPossibilitiesGraph(grid_state, max, this.game.rounds_played + initial_depth-depth);
 	var current_state = graph.nodes[0];
 	var x = Math.floor(GRID_SIZE/2);
 	var y = Math.floor(GRID_SIZE/2);
 
-	if(depth == 0 || this.game.checkVictory(grid_state) != undefined){
-		var value = this.utility(grid_state, this.game.rounds_played + initial_depth);
-		x = current_state.x;
-		y = current_state.y;
-		return [value];
-	}
-		
 	current_state.sort_neighbours();
 
 	if(max){
