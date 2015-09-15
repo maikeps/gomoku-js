@@ -94,8 +94,7 @@ GomokuAI.prototype.play = function(){
 	var alpha = -INFINITY;
 	var beta = INFINITY;
 	var choice = this.pruningMiniMax(game.grid, AI_DEPTH, AI_DEPTH, true, alpha, beta);
-	// var choice = this.minMax(game.grid, AI_DEPTH, true);
-
+	
 	var x = choice[1];
 	var y = choice[2];
 
@@ -130,13 +129,12 @@ GomokuAI.prototype.pruningMiniMax = function(grid_state, initial_depth, depth, m
 	var x = Math.floor(GRID_SIZE/2);
 	var y = Math.floor(GRID_SIZE/2);
 
-	current_state.sort_neighbours();
-
+	current_state.sort_neighbours()
+;
 	if(max){
+
 		for(var i = 0; i < current_state.sorted_neighbours.length; i++){
 			var node = current_state.sorted_neighbours[i][0];
-		// for(var key in current_state.neighbours){
-		// 	var node = current_state.neighbours[key].node;
 			var value = this.pruningMiniMax(node.info, initial_depth, depth-1, false, alpha, beta)[0];
 			if(value > alpha){
 				alpha = value;
@@ -148,12 +146,10 @@ GomokuAI.prototype.pruningMiniMax = function(grid_state, initial_depth, depth, m
 			}
 		}
 		return [alpha, x, y];
+
 	}else{
 		for(var i = 0; i < current_state.sorted_neighbours.length; i++){
 			var node = current_state.sorted_neighbours[i][0];
-
-		// for(var key in current_state.neighbours){
-		// 	var node = current_state.neighbours[key].node;
 			var value = this.pruningMiniMax(node.info, initial_depth, depth-1, true, alpha, beta)[0];
 
 			if(value < beta){
@@ -169,53 +165,6 @@ GomokuAI.prototype.pruningMiniMax = function(grid_state, initial_depth, depth, m
 	}
 }
 
-GomokuAI.prototype.minMax = function(grid_state, depth, max){
-	var graph = this.buildPossibilitiesGraph(grid_state, max);
-	var current_state = graph.nodes[0];
-	var x = Math.floor(GRID_SIZE/2);
-	var y = Math.floor(GRID_SIZE/2);
-
-	if(depth == 0 || this.game.checkVictory(grid_state) != undefined){
-		var value = this.utility(grid_state);
-		x = current_state.x;
-		y = current_state.y;
-		return [value];
-	}
-	
-
-	if(max){
-		var max_value = -INFINITY;
-		// for(var i = 0; i < current_state.sorted_neighbours.length; i++){
-		for(var key in current_state.neighbours){
-			var node = current_state.neighbours[key].node;
-			// var node = current_state.sorted_neighbours[i];
-			var value = this.minMax(node.info, depth-1, false)[0];
-
-			if(value > max_value){
-				max_value = value;
-				x = node.x;
-				y = node.y;
-			}
-		}
-		return [max_value, x, y];
-	}else{
-		var min_value = INFINITY;
-
-		for(var key in current_state.neighbours){
-			var node = current_state.neighbours[key].node;
-			var value = this.minMax(node.info, depth-1, true)[0];
-
-			if(value < min_value){
-				min_value = value;
-				x = node.x;
-				y = node.y;
-			}
-		}
-		return [min_value, x, y];
-	}
-}
-
-GomokuAI.prototype.utility = function(grid_state, rounds_played){
 	/*
 	 *
 	 * This should determine how close to victory the AI is
@@ -234,7 +183,8 @@ GomokuAI.prototype.utility = function(grid_state, rounds_played){
 	 * possibilities to make asequence
 	 *
 	 */
-	
+
+GomokuAI.prototype.utility = function(grid_state, rounds_played){
 	var playerSeq = this.findSequences(grid_state, this.player_number);
 	var playerValue = this.evaluateSequences(playerSeq, rounds_played);
 
@@ -244,16 +194,15 @@ GomokuAI.prototype.utility = function(grid_state, rounds_played){
 	return playerValue - oponentValue;
 }
 
-//TODO otimizar
 GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_number){
 	var sequences = [];	
 
 	var visited_grid = function(){
 		var visited = [];
 		
-		for(var i = 0; i < grid_state.length; i++){
+		for(var i = 0; i < GRID_SIZE; i++){
 			var line = [];
-			for(var j = 0; j < grid_state[i].length; j++){
+			for(var j = 0; j < GRID_SIZE; j++){
 				line.push(0);
 			}
 			visited.push(line);
@@ -266,8 +215,8 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 	// I = Y
 
 	//  -
-	for(var i = 0; i < grid_state.length; i++){
-		for(var j = 0; j < grid_state[i].length; j++){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
 			if(grid_state[i][j] == player_number){
 				var sequence = [[i, j]];
 				for(var k = 1; k <= SEQUENCE_SIZE; k++){
@@ -279,7 +228,9 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					sequence.push([i,j+k]);
 				}
 				sequences.push(sequence);
+
 				j = j+sequence.length-1;
+
 			}
 		}
 	}	
@@ -288,8 +239,8 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 	var visited_col = visited_grid();
 	var visited_diag1 = visited_grid();
 	var visited_diag2 = visited_grid();
-	for(var i = 0; i < grid_state.length; i++){
-		for(var j = 0; j < grid_state[i].length; j++){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
 			// |
 			if(grid_state[i][j] == player_number && visited_col[i][j] == 0){
 				var sequence = [[i, j]];
@@ -302,6 +253,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					sequence.push([i+k, j]);
 					visited_col[i+k][j] = 1;
 				}
+				
 				sequences.push(sequence);
 			}
 
@@ -317,6 +269,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					sequence.push([i+k, j-k]);
 					visited_diag1[i+k][j-k] = 1;
 				}
+				
 				sequences.push(sequence);
 			}
 
@@ -332,6 +285,7 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					sequence.push([i+k, j+k]);
 					visited_diag2[i+k][j+k] = 1;
 				}
+				
 				sequences.push(sequence);
 			}
 		}
@@ -349,7 +303,6 @@ GomokuAI.prototype.evaluateSequences = function(sequences, rounds_played){
 		
 		if(sequence.length != 1){
 			value = Math.pow(3, sequence.length*2) / (rounds_played+1);
-			// console.log(sequence.length*2, rounds_played+1, value);
 		} else{
 			value += 0.1;
 		}
@@ -359,7 +312,6 @@ GomokuAI.prototype.evaluateSequences = function(sequences, rounds_played){
 	return sum;
 }
 
-//TODO otimizar
 GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max, rounds_played){	
 	var graph = new Graph();
 	var root = new Node(this.copyGrid(grid_state));
@@ -368,8 +320,8 @@ GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max, rounds_pl
 	var visited_grid = this.game.buildGrid();		
 	
 	var grid_aux = this.copyGrid(grid_state);
-	for(var i = 0; i < grid_state.length; i++){
-		for(var j = 0; j < grid_state[i].length; j++){
+	for(var i = 0; i < GRID_SIZE; i++){
+		for(var j = 0; j < GRID_SIZE; j++){
 			if(grid_state[i][j] != 0){
 				var distance = 1;
 				for(var k = -distance; k <= distance; k++){
@@ -402,7 +354,6 @@ GomokuAI.prototype.buildPossibilitiesGraph = function(grid_state, max, rounds_pl
 }
 
 GomokuAI.prototype.setGame = function(game){
-	
 	this.game = game;
 }
 
