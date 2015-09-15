@@ -439,154 +439,53 @@ Game.prototype.play = function(grid_x, grid_y){
 }
 
 Game.prototype.checkVictory = function(grid){
-	var cont1 = 0;
-	var cont2 = 0;
-	
-	//line
 	for(var i = 0; i < GRID_SIZE; i++){
 		for(var j = 0; j < GRID_SIZE; j++){
 			if(grid[i][j] == 1){
-				cont1++;
-				cont2 = 0;
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i][j+k] == 1; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "white";
+					}
+				}
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j] == 1; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "white";
+					}
+				}
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j-k] == 1; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "white";
+					}
+				}
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j+k] == 1; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "white";
+					}
+				}
 			}else if(grid[i][j] == 2){
-				cont1 = 0;
-				cont2++;
-			} else{
-				cont1 = 0;
-				cont2 = 0;
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
-		}
-		cont1 = 0;
-		cont2 = 0;
-	}
-	
-	//column
-	for(var i = 0; i < GRID_SIZE; i++){
-		for(var j = 0; j < GRID_SIZE; j++){
-			if(grid[j][i] == 1){
-				cont1++;
-				cont2 = 0;
-			}else if(grid[j][i] == 2){
-				cont1 = 0;
-				cont2++;
-			} else{
-				cont1 = 0;
-				cont2 = 0;
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
-		}
-		cont1 = 0;
-		cont2 = 0;
-	}
-	
-	// "\"
-	for(var i = 0; i < GRID_SIZE; i++){
-		for(var j = 0; j < GRID_SIZE; j++){
-			//Down Right
-			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(grid, j+k, i+k);
-				if(next == -1 || next == 0){
-					cont1 = 0;
-					cont2 = 0;
-				}else if(next == 1){
-					cont1++;
-					cont2 = 0;
-				}else{
-					cont2++;
-					cont1 = 0;
+
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i][j+k] == 2; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "black";
+					}
 				}
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
-
-			cont1 = 0;
-			cont2 = 0;
-
-			//Up Left
-			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(grid, j-k, i-k);
-				if(next == -1 || next == 0){
-					cont1 = 0;
-					cont2 = 0;
-				}else if(next == 1){
-					cont1++;
-					cont2 = 0;
-				}else{
-					cont2++;
-					cont1 = 0;
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j] == 2; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "black";
+					}
 				}
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
-
-			cont1 = 0;
-			cont2 = 0;
-		}
-	}
-
-	// "/"
-	for(var i = 0; i < GRID_SIZE; i++){
-		for(var j = 0; j < GRID_SIZE; j++){
-			//Down Left
-			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(grid, j-k, i+k);
-				if(next == -1 || next == 0){
-					cont1 = 0;
-					cont2 = 0;
-				}else if(next == 1){
-					cont1++;
-					cont2 = 0;
-				}else{
-					cont2++;
-					cont1 = 0;
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j-k] == 2; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "black";
+					}
 				}
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
-
-			cont1 = 0;
-			cont2 = 0;
-
-			//Up Right
-			for(var k = 0; k < this.sequence_size; k++){
-				var next = this.getCell(grid, j+k, i-k);
-				if(next == -1 || next == 0){
-					cont1 = 0;
-					cont2 = 0;
-				}else if(next == 1){
-					cont1++;
-					cont2 = 0;
-				}else{
-					cont2++;
-					cont1 = 0;
+				for(var k = 1; k < SEQUENCE_SIZE && grid[i+k][j+k] == 2; k++){
+					if(k == SEQUENCE_SIZE-1){
+						return "black";
+					}
 				}
-			}
-			if(cont1 == this.sequence_size){
-				return "white";
-			} else if(cont2 == this.sequence_size){
-				return "black";
-			}
 
-			cont1 = 0;
-			cont2 = 0;
+			}
 		}
 	}
 }
@@ -695,5 +594,6 @@ setInterval(function(){
 	renderer.render();
 	if(game.gameover){
 		console.log(game.checkVictory(game.grid));
+		return;
 	}
-}, 100);
+}, 1);
