@@ -227,7 +227,10 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					}
 					sequence.push([i,j+k]);
 				}
-				sequences.push(sequence);
+
+				if(!this.isBlocked(grid_state, sequence, "line", oponent_number)){
+					sequences.push(sequence);
+				}
 
 				j = j+sequence.length-1;
 
@@ -253,8 +256,10 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					sequence.push([i+k, j]);
 					visited_col[i+k][j] = 1;
 				}
-				
-				sequences.push(sequence);
+
+				if(!this.isBlocked(grid_state, sequence, "column", oponent_number)){
+					sequences.push(sequence);
+				}
 			}
 
 			// /
@@ -270,7 +275,9 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					visited_diag1[i+k][j-k] = 1;
 				}
 				
-				sequences.push(sequence);
+				if(!this.isBlocked(grid_state, sequence, "diag1", oponent_number)){
+					sequences.push(sequence);
+				}
 			}
 
 			// \
@@ -286,12 +293,43 @@ GomokuAI.prototype.findSequences = function(grid_state, player_number, oponent_n
 					visited_diag2[i+k][j+k] = 1;
 				}
 				
-				sequences.push(sequence);
+				if(!this.isBlocked(grid_state, sequence, "diag2", oponent_number)){
+					sequences.push(sequence);
+				}
 			}
 		}
 	}
 	
 	return sequences;
+}
+
+GomokuAI.prototype.isBlocked = function(grid, sequence, orientation, oponent_number){
+	var starti = sequence[0][0];
+	var startj = sequence[0][1];
+	var start = -1;
+	var end = -1;
+
+
+	switch(orientation){
+	case "line":
+		start = this.game.getCell(grid, startj-1, starti);
+		end = this.game.getCell(grid, startj+sequence.length, starti);
+		break;
+	case "column":
+		start = this.game.getCell(grid, startj, starti-1);
+		end = this.game.getCell(grid, startj, starti+sequence.length);
+		break;	
+	case "diag1": // /
+		start = this.game.getCell(grid, startj+1, starti-1);
+		end = this.game.getCell(grid, startj-sequence.length, starti+sequence.length);
+		break;
+	case "diag2": // \
+		start = this.game.getCell(grid, startj-1, starti-1);
+		end = this.game.getCell(grid, startj+sequence.length, starti+sequence.length);
+		break;
+	}
+
+	return (start == -1 || start == oponent_number) && (end == -1 || end == oponent_number);
 }
 
 //TODO otimizar
